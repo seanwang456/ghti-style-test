@@ -1,0 +1,5 @@
+.DS_Store
+*.log
+tmp-*.png
+qa-*.png
+.playwright-mcp/
