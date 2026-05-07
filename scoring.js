@@ -382,24 +382,24 @@ D. 保持自主和自由，不被固定的风格束缚
     FRCI: { name: "自然母性者", english: "The Natural Nurturer", tagline: "流动低调 · 温和张力 · 灵感驱动", refs: "海清、蒋雯丽" },
   };
 
-  const TYPE_IMAGE_BASE = "GHTI_开发交付包/GHTI_开发交付包/02_单图_16款_统一尺寸/";
+  const TYPE_IMAGE_BASE = "assets/results/";
   const TYPE_IMAGES = {
-    SADP: "SADP_黑风衣女老板.png",
-    SADI: "SADI_锋利大女主.png",
-    SACP: "SACP_通勤高级感.png",
-    SACI: "SACI_冷感设计师.png",
-    SRDP: "SRDP_雪地大小姐.png",
-    SRDI: "SRDI_白大衣酷女孩.png",
-    SRCP: "SRCP_图书馆美人.png",
-    SRCI: "SRCI_月光极简感.png",
-    FADP: "FADP_红毯女主感.png",
-    FADI: "FADI_电影感女主.png",
-    FACP: "FACP_奶油主理人.png",
-    FACI: "FACI_法式松弛感.png",
-    FRDP: "FRDP_黑纱氛围感.png",
-    FRDI: "FRDI_深海神秘感.png",
-    FRCP: "FRCP_白毛衣治愈系.png",
-    FRCI: "FRCI_森系温柔感.png",
+    SADP: "SADP.webp",
+    SADI: "SADI.webp",
+    SACP: "SACP.webp",
+    SACI: "SACI.webp",
+    SRDP: "SRDP.webp",
+    SRDI: "SRDI.webp",
+    SRCP: "SRCP.webp",
+    SRCI: "SRCI.webp",
+    FADP: "FADP.webp",
+    FADI: "FADI.webp",
+    FACP: "FACP.webp",
+    FACI: "FACI.webp",
+    FRDP: "FRDP.webp",
+    FRDI: "FRDI.webp",
+    FRCP: "FRCP.webp",
+    FRCI: "FRCI.webp",
   };
 
   Object.entries(TYPE_IMAGES).forEach(([typeCode, fileName]) => {

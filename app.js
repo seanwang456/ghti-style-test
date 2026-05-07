@@ -219,7 +219,7 @@ function renderResult() {
       <p class="kicker"><span></span> YOUR GHTI ARCHETYPE</p>
       <section class="image-card" aria-label="原型视觉卡">
         <div class="image-chip">⊙ ${result.typeCode} · IMAGE</div>
-        <img class="type-portrait" src="${imageUrl}" alt="${result.typeCode} ${result.type.name} 风格图" loading="lazy" decoding="async" />
+        <img class="type-portrait" src="${imageUrl}" alt="${result.typeCode} ${result.type.name} 风格图" width="768" height="1152" loading="eager" decoding="async" fetchpriority="high" />
       </section>
       <section class="result-title">
         <p>${result.typeCode.split("").join(" · ")}</p>

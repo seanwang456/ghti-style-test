@@ -3,3 +3,4 @@
 tmp-*.png
 qa-*.png
 .playwright-mcp/
+.playwright-cli/

@@ -25,7 +25,7 @@ assert.equal(mostlyC.needTag, "平衡");
 assert.equal(mostlyC.decisionTag, "平衡型");
 
 for (const [typeCode, type] of Object.entries(TYPES)) {
-  assert.match(type.image, new RegExp(`${typeCode}_.+\\.png$`));
+  assert.equal(type.image, `assets/results/${typeCode}.webp`);
 }
 
 const partialAnswers = { 1: "A", 2: "B", 4: "D" };
