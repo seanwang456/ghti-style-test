@@ -6,6 +6,18 @@ function answersWith(letter) {
   return Object.fromEntries(QUESTIONS.map((question) => [question.id, letter]));
 }
 
+function answersForType(typeCode) {
+  const letterToAnswer = { S: "A", F: "D", A: "A", R: "D", D: "A", C: "D", P: "A", I: "D" };
+  const answers = {};
+  typeCode.split("").forEach((letter, index) => {
+    const [start, end] = [index * 15 + 1, index * 15 + 15];
+    for (let id = start; id <= end; id += 1) {
+      answers[id] = letterToAnswer[letter];
+    }
+  });
+  return answers;
+}
+
 const allA = computeResult(answersWith("A"));
 assert.equal(allA.typeCode, "SADP");
 assert.deepEqual(allA.axis.map((item) => item.positivePercent), [100, 100, 100, 100]);
@@ -27,6 +39,9 @@ assert.equal(mostlyC.decisionTag, "平衡型");
 for (const [typeCode, type] of Object.entries(TYPES)) {
   assert.equal(type.image, `assets/results/${typeCode}.webp`);
 }
+
+const resultStories = Object.keys(TYPES).map((typeCode) => computeResult(answersForType(typeCode)).story);
+assert.equal(new Set(resultStories).size, Object.keys(TYPES).length);
 
 const partialAnswers = { 1: "A", 2: "B", 4: "D" };
 assert.equal(getFirstMissingQuestion(partialAnswers, 1, 5), 3);
