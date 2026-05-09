@@ -7,5 +7,11 @@ const appSource = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
 assert.match(appSource, /data-action="download-result-share"/);
 assert.match(appSource, /保存分享卡片/);
 assert.match(appSource, /function downloadResultShareCard/);
+assert.match(appSource, /class="result-hero"/);
+assert.match(appSource, /result\.type\.shareImage/);
+assert.match(appSource, /class="result-code-backdrop"/);
+assert.match(appSource, /class="result-style-highlights"/);
+assert.match(appSource, /SHARE_URL_PILL/);
+assert.doesNotMatch(appSource, /<section class="image-card"/);
 
 console.log("app static tests passed");

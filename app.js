@@ -9,6 +9,9 @@ const SHARE_CARD_HEIGHT = 1920;
 const SHARE_SITE_URL = "https://ghti.com";
 const SHARE_DISPLAY_URL = "ghti.com";
 const SHARE_QR_IMAGE = "assets/share/qr-ghti-com.png";
+const SHARE_URL_PILL = { x: 108, y: 1742, width: 430, height: 52, radius: 26 };
+const SHARE_QR_FRAME = { x: 774, y: 1628, size: 166, radius: 9 };
+const SHARE_QR_IMAGE_BOX = { x: 790, y: 1644, size: 134 };
 const SHARE_SERIF = '"Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif';
 const SHARE_SANS = '"PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
 const AXIS_HINTS = {
@@ -225,25 +228,45 @@ function remindFirstMissingQuestion() {
 function renderResult() {
   const result = computeResult(state.answers);
   const axisRows = result.axis.map(renderAxisRow).join("");
-  const imageUrl = encodeURI(result.type.image);
+  const imageUrl = encodeURI(result.type.shareImage);
+  const resultHighlights = buildShareHighlights(result.typeCode);
   app.innerHTML = `
     ${renderHeader("COMPLETE")}
     <main class="result-screen page-pad">
-      <p class="kicker"><span></span> YOUR GHTI ARCHETYPE</p>
-      <section class="image-card" aria-label="原型视觉卡">
-        <div class="image-chip">⊙ ${result.typeCode} · IMAGE</div>
-        <img class="type-portrait" src="${imageUrl}" alt="${result.typeCode} ${result.type.name} 风格图" width="768" height="1152" loading="eager" decoding="async" fetchpriority="high" />
-      </section>
-      <section class="result-title">
-        <p>${result.typeCode.split("").join(" · ")}</p>
-        <h1>${result.type.name}</h1>
-        <h2>${result.type.english}</h2>
-        <h3>${result.type.tagline}</h3>
-        <div class="celebrity-reference">
-          <span>参考明星</span>
-          <b>${result.type.refs}</b>
+      <section class="result-hero" aria-label="你的 GHTI 风格原型">
+        <p class="result-hero-kicker"><span></span> YOUR GHTI ARCHETYPE</p>
+        <div class="result-code-backdrop" aria-hidden="true">${result.typeCode}</div>
+        <i class="result-light-spot spot-one" aria-hidden="true"></i>
+        <i class="result-light-spot spot-two" aria-hidden="true"></i>
+        <i class="result-light-spot spot-three" aria-hidden="true"></i>
+        <i class="result-light-spot spot-four" aria-hidden="true"></i>
+        <div class="result-person-stage" aria-hidden="true">
+          <img class="result-person" src="${imageUrl}" alt="" width="640" height="1280" loading="eager" decoding="async" fetchpriority="high" />
         </div>
-        <p class="result-copy">${result.story}</p>
+        <div class="result-lower-glow" aria-hidden="true"></div>
+        <div class="result-identity-panel">
+          <p class="result-code-line">${result.typeCode.split("").join(" · ")}</p>
+          <h1>${result.type.name}</h1>
+          <h2>${result.type.english}</h2>
+          <h3>${result.type.tagline}</h3>
+          <div class="celebrity-reference">
+            <span>参考明星</span>
+            <b>${result.type.refs}</b>
+          </div>
+          <div class="result-style-highlights" aria-label="风格维度摘要">
+            ${resultHighlights
+              .map(
+                (item) => `
+                  <div>
+                    <b>${item.zh}</b>
+                    <span>${item.en}</span>
+                  </div>
+                `
+              )
+              .join("")}
+          </div>
+          <p class="result-copy">${result.story}</p>
+        </div>
       </section>
       <section class="chips">
         ${result.chips.map((chip) => `<span>${chip}</span>`).join("")}
@@ -536,18 +559,20 @@ async function drawShareCard(canvas, result) {
   ctx.font = `27px ${SHARE_SERIF}`;
   ctx.fillText("60 道题 · 4 维度 · 16 种穿衣人格", 105, 1722);
 
-  roundedRect(ctx, 100, 1754, 526, 60, 30);
+  roundedRect(ctx, SHARE_URL_PILL.x, SHARE_URL_PILL.y, SHARE_URL_PILL.width, SHARE_URL_PILL.height, SHARE_URL_PILL.radius);
   ctx.fillStyle = "#eda0b9";
   ctx.fill();
   ctx.fillStyle = "#5a1b27";
   ctx.font = `30px ${SHARE_SERIF}`;
-  ctx.fillText(SHARE_DISPLAY_URL, 252, 1795);
+  ctx.textAlign = "center";
+  ctx.fillText(SHARE_DISPLAY_URL, SHARE_URL_PILL.x + SHARE_URL_PILL.width / 2, SHARE_URL_PILL.y + 36);
+  ctx.textAlign = "start";
 
-  roundedRect(ctx, 772, 1624, 178, 178, 9);
+  roundedRect(ctx, SHARE_QR_FRAME.x, SHARE_QR_FRAME.y, SHARE_QR_FRAME.size, SHARE_QR_FRAME.size, SHARE_QR_FRAME.radius);
   ctx.strokeStyle = "rgba(90, 27, 39, 0.62)";
   ctx.lineWidth = 2;
   ctx.stroke();
-  ctx.drawImage(qr, 788, 1640, 146, 146);
+  ctx.drawImage(qr, SHARE_QR_IMAGE_BOX.x, SHARE_QR_IMAGE_BOX.y, SHARE_QR_IMAGE_BOX.size, SHARE_QR_IMAGE_BOX.size);
 
   ctx.strokeStyle = "rgba(246, 134, 161, 0.72)";
   ctx.lineWidth = 1.2;
