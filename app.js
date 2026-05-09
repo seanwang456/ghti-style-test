@@ -9,9 +9,10 @@ const SHARE_CARD_HEIGHT = 1920;
 const SHARE_SITE_URL = "https://ghti.com";
 const SHARE_DISPLAY_URL = "ghti.com";
 const SHARE_QR_IMAGE = "assets/share/qr-ghti-com.png";
-const SHARE_URL_PILL = { x: 108, y: 1742, width: 430, height: 52, radius: 26 };
-const SHARE_QR_FRAME = { x: 774, y: 1628, size: 166, radius: 9 };
-const SHARE_QR_IMAGE_BOX = { x: 790, y: 1644, size: 134 };
+const SHARE_CTA_PANEL = { x: 66, y: 1558, width: 948, height: 248, radius: 30 };
+const SHARE_URL_PILL = { x: 108, y: 1720, width: 430, height: 52, radius: 26 };
+const SHARE_QR_FRAME = { x: 774, y: 1588, size: 178, radius: 9 };
+const SHARE_QR_IMAGE_BOX = { x: 790, y: 1604, size: 146 };
 const SHARE_SERIF = '"Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif';
 const SHARE_SANS = '"PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
 const AXIS_HINTS = {
@@ -473,6 +474,43 @@ function drawStars(ctx) {
   });
 }
 
+function drawCelebrityPill(ctx, refs, x, y, maxWidth = 600) {
+  const label = "参考明星";
+  const celebrityText = refs.replace("、", " · ");
+  const height = 68;
+  const horizontalPadding = 32;
+  const labelGap = 26;
+  const labelSize = 29;
+  let celebritySize = 36;
+
+  ctx.font = `${labelSize}px ${SHARE_SERIF}`;
+  const labelWidth = ctx.measureText(label).width;
+  ctx.font = `${celebritySize}px ${SHARE_SERIF}`;
+  let celebrityWidth = ctx.measureText(celebrityText).width;
+  let width = horizontalPadding * 2 + labelWidth + labelGap + celebrityWidth;
+
+  while (width > maxWidth && celebritySize > 30) {
+    celebritySize -= 1;
+    ctx.font = `${celebritySize}px ${SHARE_SERIF}`;
+    celebrityWidth = ctx.measureText(celebrityText).width;
+    width = horizontalPadding * 2 + labelWidth + labelGap + celebrityWidth;
+  }
+
+  width = Math.min(width, maxWidth);
+  roundedRect(ctx, x, y, width, height, height / 2);
+  ctx.strokeStyle = "rgba(246, 134, 161, 0.78)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  const textY = y + 44;
+  ctx.fillStyle = "rgba(236, 143, 167, 0.86)";
+  ctx.font = `${labelSize}px ${SHARE_SERIF}`;
+  ctx.fillText(label, x + horizontalPadding, textY);
+  ctx.fillStyle = "#fff6f4";
+  ctx.font = `${celebritySize}px ${SHARE_SERIF}`;
+  ctx.fillText(celebrityText, x + horizontalPadding + labelWidth + labelGap, textY);
+}
+
 async function drawShareCard(canvas, result) {
   const ctx = canvas.getContext("2d");
   const [person, qr] = await Promise.all([
@@ -508,16 +546,7 @@ async function drawShareCard(canvas, result) {
   ctx.font = `italic 58px ${SHARE_SERIF}`;
   ctx.fillText(result.type.english, 98, 1297);
 
-  roundedRect(ctx, 92, 1345, 414, 68, 34);
-  ctx.strokeStyle = "rgba(246, 134, 161, 0.78)";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  ctx.fillStyle = "rgba(236, 143, 167, 0.86)";
-  ctx.font = `29px ${SHARE_SERIF}`;
-  ctx.fillText("参考明星", 124, 1389);
-  ctx.fillStyle = "#fff6f4";
-  ctx.font = `36px ${SHARE_SERIF}`;
-  ctx.fillText(result.type.refs.replace("、", " · "), 277, 1389);
+  drawCelebrityPill(ctx, result.type.refs, 92, 1345, 604);
 
   const highlights = buildShareHighlights(result.typeCode);
   ctx.strokeStyle = "rgba(246, 134, 161, 0.32)";
@@ -542,12 +571,8 @@ async function drawShareCard(canvas, result) {
     ctx.fillText(item.en, 782, y + 33);
   });
 
-  ctx.fillStyle = "#fff6f4";
-  ctx.font = `34px ${SHARE_SERIF}`;
-  drawWrappedText(ctx, result.story, 92, 1508, 900, 48, 2);
-
-  roundedRect(ctx, 66, 1604, 948, 210, 30);
-  const panelGradient = ctx.createLinearGradient(66, 1604, 1014, 1814);
+  roundedRect(ctx, SHARE_CTA_PANEL.x, SHARE_CTA_PANEL.y, SHARE_CTA_PANEL.width, SHARE_CTA_PANEL.height, SHARE_CTA_PANEL.radius);
+  const panelGradient = ctx.createLinearGradient(SHARE_CTA_PANEL.x, SHARE_CTA_PANEL.y, SHARE_CTA_PANEL.x + SHARE_CTA_PANEL.width, SHARE_CTA_PANEL.y + SHARE_CTA_PANEL.height);
   panelGradient.addColorStop(0, "#fff9f5");
   panelGradient.addColorStop(1, "#f4e6df");
   ctx.fillStyle = panelGradient;
@@ -555,9 +580,9 @@ async function drawShareCard(canvas, result) {
 
   ctx.fillStyle = "#5a1b27";
   ctx.font = `38px ${SHARE_SERIF}`;
-  ctx.fillText("扫码测试你的 GHTI 风格原型", 105, 1673);
+  ctx.fillText("扫码测试你的 GHTI 风格原型", 105, 1630);
   ctx.font = `27px ${SHARE_SERIF}`;
-  ctx.fillText("60 道题 · 4 维度 · 16 种穿衣人格", 105, 1722);
+  ctx.fillText("60 道题 · 4 维度 · 16 种穿衣人格", 105, 1681);
 
   roundedRect(ctx, SHARE_URL_PILL.x, SHARE_URL_PILL.y, SHARE_URL_PILL.width, SHARE_URL_PILL.height, SHARE_URL_PILL.radius);
   ctx.fillStyle = "#eda0b9";

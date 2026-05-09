@@ -12,6 +12,9 @@ assert.match(appSource, /result\.type\.shareImage/);
 assert.match(appSource, /class="result-code-backdrop"/);
 assert.match(appSource, /class="result-style-highlights"/);
 assert.match(appSource, /SHARE_URL_PILL/);
+assert.match(appSource, /function drawCelebrityPill/);
+assert.match(appSource, /measureText\(celebrityText\)/);
 assert.doesNotMatch(appSource, /<section class="image-card"/);
+assert.doesNotMatch(appSource, /drawWrappedText\(ctx,\s*result\.story/);
 
 console.log("app static tests passed");
