@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 
-const { computeResult, getFirstMissingQuestion, QUESTIONS, TYPES } = require("../scoring.js");
+const { buildShareHighlights, computeResult, getFirstMissingQuestion, QUESTIONS, TYPES } = require("../scoring.js");
 
 function answersWith(letter) {
   return Object.fromEntries(QUESTIONS.map((question) => [question.id, letter]));
@@ -38,7 +38,14 @@ assert.equal(mostlyC.decisionTag, "平衡型");
 
 for (const [typeCode, type] of Object.entries(TYPES)) {
   assert.equal(type.image, `assets/results/${typeCode}.webp`);
+  assert.equal(type.shareImage, `assets/share-people/${typeCode}.webp`);
 }
+
+assert.deepEqual(buildShareHighlights("SRCP"), [
+  { zh: "结构化低调", en: "Structured Reserve" },
+  { zh: "克制张力", en: "Restrained Tension" },
+  { zh: "标准驱动", en: "Standards Driven" },
+]);
 
 const resultStories = Object.keys(TYPES).map((typeCode) => computeResult(answersForType(typeCode)).story);
 assert.equal(new Set(resultStories).size, Object.keys(TYPES).length);

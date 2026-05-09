@@ -824,6 +824,63 @@ button {
   margin-top: 34px;
 }
 
+.share-preview-screen {
+  min-height: 100vh;
+  padding: 18px 14px 42px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 111, 175, 0.14), transparent 30%),
+    #040205;
+}
+
+.share-preview-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin: 0 -14px 14px;
+  padding: 10px 14px 12px;
+  color: rgba(255, 244, 248, 0.62);
+  background: linear-gradient(180deg, rgba(4, 2, 5, 0.95), rgba(4, 2, 5, 0.78));
+  border-bottom: 1px solid rgba(255, 103, 166, 0.18);
+  backdrop-filter: blur(14px);
+  font-size: 12px;
+}
+
+.share-preview-toolbar a,
+.share-preview-toolbar button {
+  min-height: 36px;
+  padding: 0 13px;
+  color: var(--text);
+  background: rgba(255, 244, 248, 0.04);
+  border: 1px solid rgba(255, 103, 166, 0.28);
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.share-preview-toolbar a {
+  display: inline-grid;
+  place-items: center;
+}
+
+.share-preview-toolbar span {
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-card-canvas {
+  display: block;
+  width: min(100%, 540px);
+  height: auto;
+  margin: 0 auto;
+  border-radius: 18px;
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.55);
+}
+
 .ghost-wide {
   width: 100%;
   min-height: 50px;

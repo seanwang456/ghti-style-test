@@ -442,6 +442,26 @@ D. 保持自主和自由，不被固定的风格束缚
     TYPES[typeCode].imageLabel = fileName;
   });
 
+  const TYPE_SHARE_IMAGE_BASE = "assets/share-people/";
+  Object.keys(TYPES).forEach((typeCode) => {
+    TYPES[typeCode].shareImage = `${TYPE_SHARE_IMAGE_BASE}${typeCode}.webp`;
+  });
+
+  const SHARE_PRESENCE_LABELS = {
+    SA: { zh: "结构化强势", en: "Structured Assertive" },
+    SR: { zh: "结构化低调", en: "Structured Reserve" },
+    FA: { zh: "流动强势", en: "Fluid Assertive" },
+    FR: { zh: "流动低调", en: "Fluid Reserve" },
+  };
+  const SHARE_TENSION_LABELS = {
+    D: { zh: "戏剧张力", en: "Dynamic Tension" },
+    C: { zh: "克制张力", en: "Restrained Tension" },
+  };
+  const SHARE_DECISION_LABELS = {
+    P: { zh: "标准驱动", en: "Standards Driven" },
+    I: { zh: "直觉驱动", en: "Intuition Driven" },
+  };
+
   const NEED_TAGS = { A: "稳定", B: "被接住", C: "平衡", D: "自主" };
   const DECISION_TAGS = { A: "架构型", B: "感受型", C: "平衡型", D: "状态型" };
 
@@ -607,10 +627,20 @@ D. 保持自主和自由，不被固定的风格束缚
       .slice(0, 3);
   }
 
+  function buildShareHighlights(code) {
+    const safeCode = TYPES[code] ? code : "SRCP";
+    return [
+      SHARE_PRESENCE_LABELS[safeCode.slice(0, 2)],
+      SHARE_TENSION_LABELS[safeCode[2]],
+      SHARE_DECISION_LABELS[safeCode[3]],
+    ];
+  }
+
   return {
     CHAPTERS,
     QUESTIONS,
     TYPES,
+    buildShareHighlights,
     computeResult,
     getFirstMissingQuestion,
   };

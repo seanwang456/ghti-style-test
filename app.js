@@ -1,7 +1,16 @@
-const { CHAPTERS, QUESTIONS, computeResult, getFirstMissingQuestion } = window.GHTI;
+const { CHAPTERS, QUESTIONS, TYPES, buildShareHighlights, computeResult, getFirstMissingQuestion } = window.GHTI;
 
 const STORAGE_KEY = "ghti-v1-state";
 const app = document.querySelector("#app");
+const query = new URLSearchParams(window.location.search);
+const isSharePreview = query.get("preview") === "share";
+const SHARE_CARD_WIDTH = 1080;
+const SHARE_CARD_HEIGHT = 1920;
+const SHARE_SITE_URL = "https://ghti.com";
+const SHARE_DISPLAY_URL = "ghti.com";
+const SHARE_QR_IMAGE = "assets/share/qr-ghti-com.png";
+const SHARE_SERIF = '"Songti SC", "STSong", "Noto Serif CJK SC", "Times New Roman", serif';
+const SHARE_SANS = '"PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
 const AXIS_HINTS = {
   sf: "结构清晰 还是 流动柔软",
   ar: "主动存在 还是 内敛低调",
@@ -50,6 +59,10 @@ function isChapterComplete(chapterIndex) {
 }
 
 function render() {
+  if (isSharePreview) {
+    renderSharePreview();
+    return;
+  }
   if (state.screen === "quiz") renderQuiz();
   else if (state.screen === "result") renderResult();
   else renderStart();
@@ -259,7 +272,8 @@ function renderResult() {
         <h4>下一步 · NEXT</h4>
         <p>你可以把这个结果当作穿搭方向参考：先抓住最适合你的轮廓、氛围和决策方式，再根据当天场合与心情微调。</p>
       </section>
-      <button class="primary-btn" data-action="reset">重新测量 <span class="arrow">→</span></button>
+      <button class="primary-btn" data-action="download-result-share">保存分享卡片 <span class="arrow">↓</span></button>
+      <button class="ghost-wide" data-action="reset">重新测量</button>
       <button class="ghost-wide" data-action="copy">复制原型代码</button>
     </main>
   `;
@@ -275,6 +289,319 @@ function renderAxisRow(axis) {
       <div class="axis-bar"><b style="width:${axis.positivePercent}%"></b><i style="left:${axis.positivePercent}%"></i></div>
     </div>
   `;
+}
+
+function safeTypeCode(value) {
+  const code = String(value || "SRCP").trim().toUpperCase();
+  return TYPES[code] ? code : "SRCP";
+}
+
+function answersForTypeCode(typeCode) {
+  const letterToAnswer = { S: "A", F: "D", A: "A", R: "D", D: "A", C: "D", P: "A", I: "D" };
+  const answers = {};
+  typeCode.split("").forEach((letter, index) => {
+    const start = index * 15 + 1;
+    const end = start + 14;
+    for (let id = start; id <= end; id += 1) answers[id] = letterToAnswer[letter];
+  });
+  answers[30] = "B";
+  return answers;
+}
+
+function renderSharePreview() {
+  const typeCode = safeTypeCode(query.get("code"));
+  const result = computeResult(answersForTypeCode(typeCode));
+  app.innerHTML = `
+    <main class="share-preview-screen">
+      <div class="share-preview-toolbar">
+        <a href="./index.html">返回测试</a>
+        <span>${result.typeCode} · 1080 × 1920</span>
+        <button data-action="download-share">保存预览图</button>
+      </div>
+      <canvas id="share-card-canvas" class="share-card-canvas" width="${SHARE_CARD_WIDTH}" height="${SHARE_CARD_HEIGHT}" aria-label="${result.typeCode} ${result.type.name} 分享卡预览"></canvas>
+    </main>
+  `;
+  drawShareCard(app.querySelector("#share-card-canvas"), result).catch(() => {
+    showToast("分享卡预览生成失败");
+  });
+}
+
+function loadCanvasImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function roundedRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+function drawTrackedText(ctx, text, y, fontSize, tracking, fillStyle) {
+  ctx.font = `${fontSize}px ${SHARE_SERIF}`;
+  ctx.fillStyle = fillStyle;
+  ctx.textBaseline = "alphabetic";
+  const chars = Array.from(text);
+  const width = chars.reduce((sum, char) => sum + ctx.measureText(char).width, 0) + tracking * (chars.length - 1);
+  let x = (SHARE_CARD_WIDTH - width) / 2;
+  chars.forEach((char) => {
+    ctx.fillText(char, x, y);
+    x += ctx.measureText(char).width + tracking;
+  });
+}
+
+function fitText(ctx, text, maxSize, minSize, maxWidth, family = SHARE_SERIF, style = "") {
+  let size = maxSize;
+  do {
+    ctx.font = `${style}${size}px ${family}`;
+    if (ctx.measureText(text).width <= maxWidth) return size;
+    size -= 2;
+  } while (size >= minSize);
+  return minSize;
+}
+
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+  const chars = Array.from(text);
+  const lines = [];
+  let line = "";
+  chars.forEach((char) => {
+    const test = line + char;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = char;
+    } else {
+      line = test;
+    }
+  });
+  if (line) lines.push(line);
+  lines.slice(0, maxLines).forEach((item, index) => {
+    let output = item;
+    if (index === maxLines - 1 && lines.length > maxLines) output = `${item.replace(/[，。；、]$/, "")}…`;
+    ctx.fillText(output, x, y + index * lineHeight);
+  });
+}
+
+function drawShareBackground(ctx) {
+  ctx.fillStyle = "#08070c";
+  ctx.fillRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+
+  const topGlow = ctx.createRadialGradient(540, 320, 80, 540, 320, 760);
+  topGlow.addColorStop(0, "rgba(39, 45, 70, 0.52)");
+  topGlow.addColorStop(0.46, "rgba(14, 17, 28, 0.54)");
+  topGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+
+  const lowerPink = ctx.createRadialGradient(535, 1370, 80, 535, 1370, 640);
+  lowerPink.addColorStop(0, "rgba(255, 111, 175, 0.18)");
+  lowerPink.addColorStop(0.34, "rgba(214, 112, 146, 0.11)");
+  lowerPink.addColorStop(1, "rgba(255, 111, 175, 0)");
+  ctx.fillStyle = lowerPink;
+  ctx.fillRect(0, 980, SHARE_CARD_WIDTH, 610);
+
+  const grain = ctx.createLinearGradient(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+  grain.addColorStop(0, "rgba(255, 244, 248, 0.025)");
+  grain.addColorStop(0.5, "rgba(255, 244, 248, 0)");
+  grain.addColorStop(1, "rgba(255, 111, 175, 0.035)");
+  ctx.fillStyle = grain;
+  ctx.fillRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+
+  ctx.strokeStyle = "rgba(246, 134, 161, 0.92)";
+  ctx.lineWidth = 2;
+  roundedRect(ctx, 32, 32, SHARE_CARD_WIDTH - 64, SHARE_CARD_HEIGHT - 64, 44);
+  ctx.stroke();
+}
+
+function drawStars(ctx) {
+  const spots = [
+    [184, 588, 10, 0.18],
+    [246, 692, 22, 0.34],
+    [154, 812, 13, 0.2],
+    [319, 780, 8, 0.14],
+    [205, 1004, 18, 0.24],
+    [812, 632, 15, 0.28],
+    [928, 774, 9, 0.16],
+    [777, 922, 7, 0.12],
+    [860, 1048, 12, 0.18],
+  ];
+  spots.forEach(([x, y, radius, opacity]) => {
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    glow.addColorStop(0, `rgba(255, 190, 212, ${opacity})`);
+    glow.addColorStop(0.32, `rgba(255, 120, 174, ${opacity * 0.52})`);
+    glow.addColorStop(1, "rgba(255, 120, 174, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(255, 216, 229, ${Math.min(opacity + 0.24, 0.58)})`;
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(1.6, radius * 0.12), 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+async function drawShareCard(canvas, result) {
+  const ctx = canvas.getContext("2d");
+  const [person, qr] = await Promise.all([
+    loadCanvasImage(encodeURI(result.type.shareImage)),
+    loadCanvasImage(SHARE_QR_IMAGE),
+  ]);
+
+  drawShareBackground(ctx);
+  ctx.fillStyle = "#fff6f8";
+  ctx.font = `39px ${SHARE_SANS}`;
+  ctx.fillText("GHTI · 风格原型", 78, 116);
+
+  drawTrackedText(ctx, result.typeCode, 456, 360, 46, "rgba(214, 127, 151, 0.82)");
+  drawStars(ctx);
+
+  const personHeight = 1320;
+  const personWidth = (person.width / person.height) * personHeight;
+  ctx.drawImage(person, (SHARE_CARD_WIDTH - personWidth) / 2 + 12, 290, personWidth, personHeight);
+
+  const lowerFade = ctx.createLinearGradient(0, 930, 0, 1550);
+  lowerFade.addColorStop(0, "rgba(8, 7, 12, 0)");
+  lowerFade.addColorStop(0.58, "rgba(8, 7, 12, 0.18)");
+  lowerFade.addColorStop(1, "rgba(8, 7, 12, 0.82)");
+  ctx.fillStyle = lowerFade;
+  ctx.fillRect(0, 930, SHARE_CARD_WIDTH, 640);
+
+  const titleSize = fitText(ctx, result.type.name, 96, 70, 690);
+  ctx.fillStyle = "#fff6f4";
+  ctx.font = `${titleSize}px ${SHARE_SERIF}`;
+  ctx.fillText(result.type.name, 92, 1230);
+
+  ctx.fillStyle = "#ee95b0";
+  ctx.font = `italic 58px ${SHARE_SERIF}`;
+  ctx.fillText(result.type.english, 98, 1297);
+
+  roundedRect(ctx, 92, 1345, 414, 68, 34);
+  ctx.strokeStyle = "rgba(246, 134, 161, 0.78)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "rgba(236, 143, 167, 0.86)";
+  ctx.font = `29px ${SHARE_SERIF}`;
+  ctx.fillText("参考明星", 124, 1389);
+  ctx.fillStyle = "#fff6f4";
+  ctx.font = `36px ${SHARE_SERIF}`;
+  ctx.fillText(result.type.refs.replace("、", " · "), 277, 1389);
+
+  const highlights = buildShareHighlights(result.typeCode);
+  ctx.strokeStyle = "rgba(246, 134, 161, 0.32)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(742, 1200);
+  ctx.lineTo(742, 1415);
+  ctx.stroke();
+  [1204, 1284, 1364].forEach((y) => {
+    ctx.fillStyle = "#f2a2b7";
+    ctx.beginPath();
+    ctx.arc(742, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  highlights.forEach((item, index) => {
+    const y = 1213 + index * 82;
+    ctx.fillStyle = "#fff6f4";
+    ctx.font = `30px ${SHARE_SERIF}`;
+    ctx.fillText(item.zh, 782, y);
+    ctx.fillStyle = "rgba(255, 244, 248, 0.68)";
+    ctx.font = `23px ${SHARE_SERIF}`;
+    ctx.fillText(item.en, 782, y + 33);
+  });
+
+  ctx.fillStyle = "#fff6f4";
+  ctx.font = `34px ${SHARE_SERIF}`;
+  drawWrappedText(ctx, result.story, 92, 1508, 900, 48, 2);
+
+  roundedRect(ctx, 66, 1604, 948, 210, 30);
+  const panelGradient = ctx.createLinearGradient(66, 1604, 1014, 1814);
+  panelGradient.addColorStop(0, "#fff9f5");
+  panelGradient.addColorStop(1, "#f4e6df");
+  ctx.fillStyle = panelGradient;
+  ctx.fill();
+
+  ctx.fillStyle = "#5a1b27";
+  ctx.font = `38px ${SHARE_SERIF}`;
+  ctx.fillText("扫码测试你的 GHTI 风格原型", 105, 1673);
+  ctx.font = `27px ${SHARE_SERIF}`;
+  ctx.fillText("60 道题 · 4 维度 · 16 种穿衣人格", 105, 1722);
+
+  roundedRect(ctx, 100, 1754, 526, 60, 30);
+  ctx.fillStyle = "#eda0b9";
+  ctx.fill();
+  ctx.fillStyle = "#5a1b27";
+  ctx.font = `30px ${SHARE_SERIF}`;
+  ctx.fillText(SHARE_DISPLAY_URL, 252, 1795);
+
+  roundedRect(ctx, 772, 1624, 178, 178, 9);
+  ctx.strokeStyle = "rgba(90, 27, 39, 0.62)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.drawImage(qr, 788, 1640, 146, 146);
+
+  ctx.strokeStyle = "rgba(246, 134, 161, 0.72)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(92, 1870);
+  ctx.lineTo(418, 1870);
+  ctx.moveTo(662, 1870);
+  ctx.lineTo(988, 1870);
+  ctx.stroke();
+  ctx.fillStyle = "#e898ad";
+  ctx.font = `31px ${SHARE_SERIF}`;
+  ctx.fillText("·  SCAN ME  ·", 442, 1880);
+}
+
+function downloadShareCard() {
+  const canvas = document.querySelector("#share-card-canvas");
+  if (!canvas) return;
+  const typeCode = safeTypeCode(query.get("code"));
+  downloadCanvas(canvas, typeCode);
+}
+
+function downloadCanvas(canvas, typeCode) {
+  canvas.toBlob((blob) => {
+    if (!blob) {
+      showToast("导出失败");
+      return;
+    }
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.download = `GHTI-${typeCode}-share-card.png`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, "image/png");
+}
+
+async function downloadResultShareCard(action) {
+  if (action) action.disabled = true;
+  showToast("正在生成分享卡片");
+  try {
+    const result = computeResult(state.answers);
+    const canvas = document.createElement("canvas");
+    canvas.width = SHARE_CARD_WIDTH;
+    canvas.height = SHARE_CARD_HEIGHT;
+    await drawShareCard(canvas, result);
+    downloadCanvas(canvas, result.typeCode);
+    showToast("分享卡片已生成");
+  } catch (error) {
+    showToast("分享卡片生成失败");
+  } finally {
+    if (action) action.disabled = false;
+  }
 }
 
 function copyResult() {
@@ -353,6 +680,8 @@ document.addEventListener("click", (event) => {
   }
 
   if (name === "copy") copyResult();
+  if (name === "download-share") downloadShareCard();
+  if (name === "download-result-share") downloadResultShareCard(action);
 });
 
 render();
