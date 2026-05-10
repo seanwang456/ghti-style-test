@@ -616,24 +616,100 @@ function downloadShareCard() {
   const canvas = document.querySelector("#share-card-canvas");
   if (!canvas) return;
   const typeCode = safeTypeCode(query.get("code"));
-  downloadCanvas(canvas, typeCode);
+  saveCanvasImage(canvas, typeCode);
 }
 
-function downloadCanvas(canvas, typeCode) {
-  canvas.toBlob((blob) => {
-    if (!blob) {
-      showToast("导出失败");
-      return;
+function canvasToBlob(canvas) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png");
+  });
+}
+
+function isMobileSaveContext() {
+  return (
+    window.matchMedia?.("(pointer: coarse)").matches ||
+    /Android|iPhone|iPad|iPod|Mobile|MicroMessenger/i.test(navigator.userAgent)
+  );
+}
+
+function triggerImageDownload(blob, typeCode) {
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.download = `GHTI-${typeCode}-share-card.png`;
+  link.href = url;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function saveCanvasImage(canvas, typeCode) {
+  const blob = await canvasToBlob(canvas);
+  if (!blob) {
+    showToast("导出失败");
+    return false;
+  }
+
+  let file = null;
+  try {
+    file = new File([blob], `GHTI-${typeCode}-share-card.png`, { type: "image/png" });
+  } catch (error) {
+    file = null;
+  }
+
+  if (isMobileSaveContext()) {
+    showShareSaveSheet(blob, typeCode, file);
+    return "sheet";
+  }
+
+  triggerImageDownload(blob, typeCode);
+  return true;
+}
+
+function showShareSaveSheet(blob, typeCode, file) {
+  const oldSheet = document.querySelector(".share-save-sheet");
+  if (oldSheet) oldSheet.remove();
+  clearToasts();
+
+  const canNativeShare = Boolean(file && navigator.canShare?.({ files: [file] }) && navigator.share);
+  const url = URL.createObjectURL(blob);
+  const sheet = document.createElement("div");
+  sheet.className = "share-save-sheet";
+  sheet.innerHTML = `
+    <div class="share-save-panel" role="dialog" aria-modal="true" aria-label="保存分享卡片">
+      <button class="share-save-close" type="button" aria-label="关闭保存预览">×</button>
+      <img class="share-save-image" src="${url}" alt="GHTI ${typeCode} 分享卡片" />
+      <p>长按图片保存到手机相册</p>
+      ${canNativeShare ? `<button class="primary-wide share-native-share" type="button">打开系统分享</button>` : ""}
+      <button class="ghost-wide share-save-download" type="button">下载图片</button>
+    </div>
+  `;
+  document.body.appendChild(sheet);
+
+  const close = () => {
+    URL.revokeObjectURL(url);
+    sheet.remove();
+  };
+  sheet.querySelector(".share-save-close").addEventListener("click", close);
+  sheet.addEventListener("click", (event) => {
+    if (event.target === sheet) close();
+  });
+  sheet.querySelector(".share-save-download").addEventListener("click", () => {
+    triggerImageDownload(blob, typeCode);
+  });
+
+  sheet.querySelector(".share-native-share")?.addEventListener("click", async () => {
+    try {
+      await navigator.share({
+        files: [file],
+        title: "GHTI 风格原型",
+        text: "保存你的 GHTI 分享卡片",
+      });
+      showToast("已打开系统分享");
+    } catch (error) {
+      if (error?.name !== "AbortError") showToast("系统分享不可用，请长按图片保存");
     }
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.download = `GHTI-${typeCode}-share-card.png`;
-    link.href = url;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }, "image/png");
+  });
 }
 
 async function downloadResultShareCard(action) {
@@ -645,8 +721,8 @@ async function downloadResultShareCard(action) {
     canvas.width = SHARE_CARD_WIDTH;
     canvas.height = SHARE_CARD_HEIGHT;
     await drawShareCard(canvas, result);
-    downloadCanvas(canvas, result.typeCode);
-    showToast("分享卡片已生成");
+    const saved = await saveCanvasImage(canvas, result.typeCode);
+    if (saved === true) showToast("分享卡片已生成");
   } catch (error) {
     showToast("分享卡片生成失败");
   } finally {
@@ -662,11 +738,16 @@ function copyResult() {
 }
 
 function showToast(message) {
+  clearToasts();
   const toast = document.createElement("div");
   toast.className = "toast";
   toast.textContent = message;
   document.body.appendChild(toast);
   window.setTimeout(() => toast.remove(), 2600);
+}
+
+function clearToasts() {
+  document.querySelectorAll(".toast").forEach((toast) => toast.remove());
 }
 
 document.addEventListener("click", (event) => {

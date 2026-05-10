@@ -293,6 +293,7 @@ button {
 
 .primary-btn,
 .ghost-btn,
+.primary-wide,
 .ghost-wide {
   border: 0;
   cursor: pointer;
@@ -647,9 +648,10 @@ button {
 .result-person {
   width: auto;
   max-width: 96%;
-  height: 100%;
+  height: auto;
+  max-height: 100%;
   object-fit: contain;
-  object-position: center bottom;
+  object-position: center top;
   filter:
     drop-shadow(0 28px 34px rgba(0, 0, 0, 0.5))
     drop-shadow(0 0 28px rgba(255, 205, 218, 0.1));
@@ -1039,6 +1041,74 @@ button {
   box-shadow: 0 24px 54px rgba(0, 0, 0, 0.55);
 }
 
+.share-save-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 1, 4, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.share-save-panel {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: min(100%, 390px);
+  max-height: min(88vh, 760px);
+  padding: 14px;
+  overflow: auto;
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(24, 8, 15, 0.98), rgba(8, 2, 6, 0.98));
+  border: 1px solid rgba(255, 132, 178, 0.44);
+  border-radius: 18px;
+  box-shadow: 0 26px 90px rgba(0, 0, 0, 0.58);
+}
+
+.share-save-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  place-items: center;
+  color: var(--text);
+  background: rgba(8, 2, 6, 0.68);
+  border: 1px solid rgba(255, 132, 178, 0.34);
+  border-radius: 999px;
+}
+
+.share-save-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  user-select: auto;
+  -webkit-user-select: auto;
+  -webkit-touch-callout: default;
+}
+
+.share-save-panel p {
+  margin: 0;
+  color: rgba(255, 244, 248, 0.72);
+  text-align: center;
+}
+
+.primary-wide {
+  width: 100%;
+  min-height: 52px;
+  color: #170711;
+  background: linear-gradient(135deg, #ff75b4, #ff63ae 58%, #ff82c3);
+  border-radius: 999px;
+  box-shadow: 0 14px 32px rgba(255, 102, 177, 0.22);
+  font-weight: 700;
+}
+
 .ghost-wide {
   width: 100%;
   min-height: 50px;
@@ -1147,9 +1217,9 @@ button {
   }
 
   .result-person-stage {
-    top: 108px;
+    top: 76px;
     right: 8px;
-    bottom: 126px;
+    bottom: 210px;
     left: 8px;
   }
 
