@@ -8,7 +8,7 @@ const SHARE_CARD_WIDTH = 1080;
 const SHARE_CARD_HEIGHT = 1920;
 const SHARE_SITE_URL = "https://ghti.com";
 const SHARE_DISPLAY_URL = "ghti.com";
-const SHARE_QR_IMAGE = "assets/share/qr-ghti-com.png";
+const SHARE_QR_IMAGE = "assets/share-card/qr-ghti-com.png";
 const SHARE_CTA_PANEL = { x: 66, y: 1558, width: 948, height: 248, radius: 30 };
 const SHARE_URL_PILL = { x: 108, y: 1720, width: 430, height: 52, radius: 26 };
 const SHARE_QR_FRAME = { x: 774, y: 1588, size: 178, radius: 9 };
@@ -229,7 +229,7 @@ function remindFirstMissingQuestion() {
 function renderResult() {
   const result = computeResult(state.answers);
   const axisRows = result.axis.map(renderAxisRow).join("");
-  const imageUrl = encodeURI(result.type.shareImage);
+  const imageUrl = encodeURI(result.type.portraitImage);
   const resultHighlights = buildShareHighlights(result.typeCode);
   app.innerHTML = `
     ${renderHeader("COMPLETE")}
@@ -514,7 +514,7 @@ function drawCelebrityPill(ctx, refs, x, y, maxWidth = 600) {
 async function drawShareCard(canvas, result) {
   const ctx = canvas.getContext("2d");
   const [person, qr] = await Promise.all([
-    loadCanvasImage(encodeURI(result.type.shareImage)),
+    loadCanvasImage(encodeURI(result.type.portraitImage)),
     loadCanvasImage(SHARE_QR_IMAGE),
   ]);
 

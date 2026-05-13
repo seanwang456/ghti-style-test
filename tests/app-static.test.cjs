@@ -9,7 +9,7 @@ assert.match(appSource, /data-action="download-result-share"/);
 assert.match(appSource, /保存分享卡片/);
 assert.match(appSource, /function downloadResultShareCard/);
 assert.match(appSource, /class="result-hero"/);
-assert.match(appSource, /result\.type\.shareImage/);
+assert.match(appSource, /result\.type\.portraitImage/);
 assert.match(appSource, /class="result-code-backdrop"/);
 assert.match(appSource, /class="result-style-highlights"/);
 assert.match(appSource, /SHARE_URL_PILL/);

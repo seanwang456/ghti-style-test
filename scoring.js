@@ -417,34 +417,9 @@ D. 保持自主和自由，不被固定的风格束缚
       "你的风格像自然生长出来的秩序。柔软、垂坠和低声量质感是你的底盘，直觉会带你选择更贴近当下的颜色和材质。你不需要被造型固定，越像自己，越有温度和辨识度。",
   };
 
-  const TYPE_IMAGE_BASE = "assets/results/";
-  const TYPE_IMAGES = {
-    SADP: "SADP.webp",
-    SADI: "SADI.webp",
-    SACP: "SACP.webp",
-    SACI: "SACI.webp",
-    SRDP: "SRDP.webp",
-    SRDI: "SRDI.webp",
-    SRCP: "SRCP.webp",
-    SRCI: "SRCI.webp",
-    FADP: "FADP.webp",
-    FADI: "FADI.webp",
-    FACP: "FACP.webp",
-    FACI: "FACI.webp",
-    FRDP: "FRDP.webp",
-    FRDI: "FRDI.webp",
-    FRCP: "FRCP.webp",
-    FRCI: "FRCI.webp",
-  };
-
-  Object.entries(TYPE_IMAGES).forEach(([typeCode, fileName]) => {
-    TYPES[typeCode].image = `${TYPE_IMAGE_BASE}${fileName}`;
-    TYPES[typeCode].imageLabel = fileName;
-  });
-
-  const TYPE_SHARE_IMAGE_BASE = "assets/share-people/";
+  const TYPE_PORTRAIT_IMAGE_BASE = "assets/portraits/";
   Object.keys(TYPES).forEach((typeCode) => {
-    TYPES[typeCode].shareImage = `${TYPE_SHARE_IMAGE_BASE}${typeCode}.webp`;
+    TYPES[typeCode].portraitImage = `${TYPE_PORTRAIT_IMAGE_BASE}${typeCode}.webp`;
   });
 
   const SHARE_PRESENCE_LABELS = {
